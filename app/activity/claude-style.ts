@@ -9,7 +9,7 @@
  * never sees.
  */
 
-import type { ActivityKind } from "@core/schema/schema.js";
+import type { ActivityKind } from "../../core/schema/schema.js";
 import {
 	clip,
 	explicitAgentId,

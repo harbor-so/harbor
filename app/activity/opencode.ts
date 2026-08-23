@@ -6,7 +6,7 @@
  * plugin-defined shape onto Harbor's canonical rows.
  */
 
-import type { ActivityKind } from "@core/schema/schema.js";
+import type { ActivityKind } from "../../core/schema/schema.js";
 import {
 	clip,
 	explicitAgentId,

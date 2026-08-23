@@ -262,33 +262,61 @@ if (violations.length > 0) {
 assertZonesPopulated(zoneCounts, "check-boundaries");
 
 /**
- * runtime/ may not use the `@core/` or `@app/` aliases, and this is the one rule
- * here whose violation is invisible until production.
+ * Nothing the sandbox image compiles may use the `@core/` or `@app/` aliases, and
+ * this is the one rule here whose violation is invisible until production.
  *
  * Everything else in the repository resolves those aliases: Next.js and tsx read
  * `paths` out of tsconfig.json, and vitest.config.ts declares them by hand. So an
- * aliased import in runtime/ typechecks, passes the suite, and looks correct.
+ * aliased import in this set typechecks, passes the suite, and looks correct.
  *
  * It then fails in the only place nobody is looking. sandbox/Dockerfile compiles
- * runtime/ with its own generated tsconfig, which has no `paths`, and the emit runs
- * under bare Node inside the agent image with no node_modules and no resolver. A
- * specifier of `@app/activity/types.js` is not resolvable there, so the sandbox
- * every agent session runs in dies on import — after a green CI run.
+ * these paths with its own generated tsconfig, which has no `paths`, and the emit
+ * runs under bare Node inside the agent image with no node_modules and no
+ * resolver. Adding `paths` to that tsconfig does not fix it either — tsc does not
+ * rewrite specifiers, so the emit would still say `@core/...` and would still be
+ * unresolvable at runtime. Relative is the only thing that survives both steps.
+ *
+ * The set is read from the Dockerfile's own COPY lines rather than restated here,
+ * because a hand-maintained copy drifts the moment somebody adds a directory to
+ * the image — which is exactly how this rule was first shipped covering only
+ * runtime/ while app/activity was equally affected, and CI caught it rather than
+ * the check.
  */
+function sandboxCompiledPaths() {
+	const dockerfile = path.join(ROOT, "sandbox", "Dockerfile");
+	if (!existsSync(dockerfile)) return ["runtime"];
+	const copied = [...readFileSync(dockerfile, "utf8").matchAll(/^COPY\s+(\S+)\s+\.\//gm)]
+		.map((m) => m[1])
+		.filter((p) => /^(runtime|app|core)\b/.test(p));
+	return copied.length > 0 ? copied : ["runtime"];
+}
+
+const sandboxPaths = sandboxCompiledPaths();
 const aliasedRuntime = [];
-for (const absolute of walk("runtime")) {
-	const file = path.relative(ROOT, path.resolve(absolute)).replaceAll("\\", "/");
-	for (const { specifier, line } of importsOf(readFileSync(absolute, "utf8")).imports) {
-		if (/^@(core|app)\//.test(specifier)) aliasedRuntime.push(`${file}:${line}  "${specifier}"`);
+for (const target of sandboxPaths) {
+	const abs = path.join(ROOT, target);
+	if (!existsSync(abs)) continue;
+	const files = statSync(abs).isDirectory() ? walk(target) : [target];
+	for (const absolute of files) {
+		// The generated tsconfig excludes tests, so a test file never reaches the
+		// image and its specifiers cannot break it. Mirror the Dockerfile's exclude
+		// as well as its include, or this reports violations the build cannot have.
+		if (/\.test\.(ts|tsx|mts)$/.test(absolute)) continue;
+		const file = path.relative(ROOT, path.resolve(absolute)).replaceAll("\\", "/");
+		for (const { specifier, line } of importsOf(readFileSync(absolute, "utf8")).imports) {
+			if (/^@(core|app)\//.test(specifier)) aliasedRuntime.push(`${file}:${line}  "${specifier}"`);
+		}
 	}
 }
+
 if (aliasedRuntime.length > 0) {
 	console.error(
-		`check-boundaries: ${aliasedRuntime.length} aliased import(s) under runtime/.\n`,
+		`check-boundaries: ${aliasedRuntime.length} aliased import(s) inside the sandbox image's `
+			+ `compile set (${sandboxPaths.join(", ")}).\n`,
 	);
 	for (const hit of aliasedRuntime) console.error(`  ${hit}`);
 	console.error(
-		"\n    runtime/ is compiled by sandbox/Dockerfile with a tsconfig that has no `paths`,\n"
+		"\n    These paths are compiled by sandbox/Dockerfile with a tsconfig that has no `paths`,\n"
 		+ "    and its emit runs under bare Node with no node_modules. Use a relative specifier\n"
 		+ "    (../../core/kernel/config.js). This passes tsc and the test suite either way —\n"
 		+ "    the failure only appears inside the sandbox image, at import time.",
@@ -298,5 +326,5 @@ if (aliasedRuntime.length > 0) {
 
 console.log(
 	"check-boundaries: core/ imports nothing outside core/, app/ imports nothing from pilot/,\n"
-	+ "                 and runtime/ uses no path aliases.",
+	+ `                 and the sandbox compile set (${sandboxPaths.join(", ")}) uses no path aliases.`,
 );

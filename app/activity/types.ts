@@ -8,7 +8,7 @@
  * and it is why the ingest route can stay a thin adapter over `recordActivity`.
  */
 
-import type { ActivityKind } from "@core/schema/schema.js";
+import type { ActivityKind } from "../../core/schema/schema.js";
 
 /** Context the route knows that the raw payload may not carry itself. */
 export interface NormalizeContext {
