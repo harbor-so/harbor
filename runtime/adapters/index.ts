@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * The adapter registry, and the handful of decisions every adapter shares.
  *
@@ -34,8 +35,8 @@
  * this module's evaluation, which is precisely when they are not yet initialised.
  */
 
-import type { NormalizedActivity } from "../../src/activity/types.js";
-import { setting } from "../../src/config.js";
+import type { NormalizedActivity } from "../../app/activity/types.js";
+import { setting } from "../../core/kernel/config.js";
 import type {
 	AgentAdapter,
 	AgentCredentialSpec,
@@ -45,7 +46,7 @@ import type {
 	AgentTurnRequest,
 	AgentUsage,
 	GitIdentity,
-} from "../../src/contracts/agent.js";
+} from "../../app/contracts/agent.js";
 import { claudeCodeAdapter } from "./claude-code.js";
 import { codexAdapter } from "./codex.js";
 import { customAdapter } from "./custom.js";

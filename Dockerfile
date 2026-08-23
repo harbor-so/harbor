@@ -103,7 +103,7 @@ FROM node:${NODE_VERSION}-bookworm-slim AS runtime
 WORKDIR /app
 
 # `tini` for the same reason as the sandbox image: both the `docker` provider and
-# `src/lib/runner.ts` spawn children, and without an init those become zombies
+# `app/lib/runner.ts` spawn children, and without an init those become zombies
 # that outlive the request that made them. It also forwards SIGTERM, which is what
 # gives an in-flight SSE stream its chance to close cleanly on a rolling restart.
 # `ca-certificates` because every provider and connector call is HTTPS, and
@@ -117,7 +117,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # The docker CLI — on by default, and worth the megabytes
 # ---------------------------------------------------------------------------
 #
-# `docker` is Harbor's DEFAULT sandbox provider, and `src/sandbox/providers/docker.ts`
+# `docker` is Harbor's DEFAULT sandbox provider, and `app/sandbox/providers/docker.ts`
 # shells out to the binary. An image without it means the out-of-the-box
 # configuration fails its first spawn with ENOENT, which is a bad first run for
 # the exact deployment shape the README promises. The client only — never the
@@ -158,12 +158,29 @@ COPY --from=build --chown=harbor:harbor /app/.next ./.next
 # No `public/` COPY: the repository has no public directory, and a COPY of a
 # missing path fails the build. Add one here if static assets are ever added.
 
-# Runtime source. `src/` and `runtime/` because the MCP server and the scripts are
-# executed from TypeScript; `drizzle/` because the migrator resolves
-# `./drizzle` relative to the working directory and a missing directory there is
-# a migration that silently applies nothing.
-COPY --chown=harbor:harbor package.json next.config.js postcss.config.js tsconfig.json next-env.d.ts ./
-COPY --chown=harbor:harbor src ./src
+# Runtime source. `core/`, `app/`, `runtime/` and `scripts/` because the MCP server
+# and the scripts are executed from TypeScript; `drizzle/` because the migrator
+# resolves `./drizzle` relative to the working directory and a missing directory
+# there is a migration that silently applies nothing.
+#
+# `tsconfig.json` is not here for the compiler — nothing compiles in this image —
+# but because `tsx` reads the `@core/*` and `@app/*` path aliases from it. Without
+# that file every aliased import in the MCP process fails to resolve at boot.
+#
+# `instrumentation.ts` rides along on the same line. `next build` compiles it into
+# `.next`, so `next start` does not read the source — but it is the one source
+# file Next resolves from the repository root and nowhere else, and before the
+# zone split it shipped as part of the source tree without anyone naming it.
+# Copying it costs a line; omitting it is how the web tier's boot checks stop
+# running without anybody noticing, which is the exact failure it exists to prevent.
+#
+# The zones are copied lowest-first, `core/` before `app/`: core is the Apache-2.0
+# layer that nothing outside it may import, so it is also the layer that changes
+# least often, and putting it first keeps an edit confined to `app/` from
+# invalidating its layer.
+COPY --chown=harbor:harbor package.json next.config.js postcss.config.js tsconfig.json next-env.d.ts instrumentation.ts ./
+COPY --chown=harbor:harbor core ./core
+COPY --chown=harbor:harbor app ./app
 COPY --chown=harbor:harbor runtime ./runtime
 COPY --chown=harbor:harbor scripts ./scripts
 COPY --chown=harbor:harbor drizzle ./drizzle
@@ -173,7 +190,7 @@ RUN chmod 0755 /usr/local/bin/harbor-entrypoint
 
 USER harbor
 
-# HOST=0.0.0.0 is set HERE rather than changing the default in src/mcp/server.ts.
+# HOST=0.0.0.0 is set HERE rather than changing the default in app/mcp/server.ts.
 # The source default stays loopback so `npm run mcp` on a laptop is not silently
 # published to a shared network; inside a container 0.0.0.0 binds only this
 # container's namespace, and what is actually reachable is decided by which ports

@@ -25,7 +25,7 @@ case "${1:-web}" in
 		# sandbox deadlines, session ticks, compaction, orphan sweeps, Devin
 		# polling. A deployment that runs only `web` runs none of those; see
 		# HARBOR_MAINTENANCE_TOKEN in .env.example for the cron escape hatch.
-		exec node_modules/.bin/tsx src/mcp/server.ts
+		exec node_modules/.bin/tsx app/mcp/server.ts
 		;;
 
 	migrate)

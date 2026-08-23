@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * The supervisor's effect layer, exercised with real processes and real files.
  *
@@ -18,7 +19,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { AGENT_RUNTIMES, type AgentAdapter } from "../src/contracts/agent.js";
+import { AGENT_RUNTIMES, type AgentAdapter } from "../app/contracts/agent.js";
 import { codexAdapter } from "./adapters/codex.js";
 import { TUNNEL_SANDBOX_ID_KEY } from "./boot-decisions.js";
 import type { OutboundEvent } from "./bridge.js";

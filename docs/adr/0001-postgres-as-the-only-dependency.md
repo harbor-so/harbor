@@ -92,8 +92,8 @@ substitute for the actor design but an improvement on it.
 - One store rather than six. No dual-write between a per-session store and a
   shared coordination index, and so no reconciliation path to get wrong.
 - Real transactions, and one store to have them in. Lease admission
-  (`claim` in `src/lib/work.ts`), budget reservation (`reserveBudget` in
-  `src/lib/cost.ts`) and event append are each atomic, and each is free to compose
+  (`claim` in `core/kernel/work.ts`), budget reservation (`reserveBudget` in
+  `app/lib/cost.ts`) and event append are each atomic, and each is free to compose
   reads and writes across several tables inside one transaction — `reserveBudget`
   reads the day's spend and writes the reservation under one org-budget lock, which
   is what makes the cap hold under concurrency.

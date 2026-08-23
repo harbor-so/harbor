@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * `docker run harbor doctor` — what is this deployment actually configured to do?
  *
@@ -23,11 +24,11 @@
  * the database is down is useless on the day the database is down.
  */
 
-import { describeConfig, validateConfig } from "../src/config.js";
-import { databaseUrl } from "../src/db/index.js";
-import { describeDatabaseTls } from "../src/db/tls.js";
-import { agentMcpUrl, mcpUrl, publicUrl, warnAboutAddressing } from "../src/lib/urls.js";
-import { SANDBOX_PROVIDER_NAMES, providerFor } from "../src/sandbox/registry.js";
+import { describeConfig, validateConfig } from "@core/kernel/config.js";
+import { databaseUrl } from "@core/schema/index.js";
+import { describeDatabaseTls } from "@core/schema/tls.js";
+import { agentMcpUrl, mcpUrl, publicUrl, warnAboutAddressing } from "@core/kernel/urls.js";
+import { SANDBOX_PROVIDER_NAMES, providerFor } from "@app/sandbox/registry.js";
 
 const problems: string[] = [];
 

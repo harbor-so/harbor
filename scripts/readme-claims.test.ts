@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * The README must describe the product that exists.
  *
@@ -16,8 +17,8 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { AGENT_RUNTIMES } from "../src/contracts/agent.js";
-import { SANDBOX_PROVIDER_NAMES } from "../src/sandbox/registry.js";
+import { AGENT_RUNTIMES } from "@app/contracts/agent.js";
+import { SANDBOX_PROVIDER_NAMES } from "@app/sandbox/registry.js";
 import { adapterFor } from "../runtime/adapters/index.js";
 
 const ROOT = process.cwd();
@@ -41,7 +42,7 @@ describe("README: sandbox providers", () => {
 		}
 
 		// And nothing invented. A row for a provider that does not exist is the
-		// failure `src/sandbox/registry.ts` refuses to allow in code; the README must
+		// failure `app/sandbox/registry.ts` refuses to allow in code; the README must
 		// not reintroduce it in prose.
 		const rows = table
 			.split("\n")
@@ -185,6 +186,22 @@ describe("the docs describe Harbor and nothing else", () => {
 			.replace(/\s+/g, " ");
 	}
 
+	/**
+	 * Everything shipped: the licence zones (`core/`, `app/`, `pilot/`), the code
+	 * that runs beside them (`runtime/`, `scripts/`), and the prose (`docs/`,
+	 * `integrations/`, `sandbox/`). This list is the whole of what the check sees,
+	 * so a new top-level directory of source has to be added here or its comments
+	 * go unread.
+	 *
+	 * A directory named here that does not exist raises ENOENT rather than being
+	 * skipped, and that is deliberate. This list went stale exactly once — it still
+	 * said `src/` after `src/` was split into zones — and the ENOENT is what
+	 * reported it. A walk that shrugged at a missing directory would instead have
+	 * gone on passing while scanning nothing, which is the failure mode this whole
+	 * file exists to avoid.
+	 */
+	const SCANNED = ["core", "app", "pilot", "runtime", "scripts", "docs", "integrations", "sandbox"];
+
 	function sources(): string[] {
 		const out: string[] = [];
 		const walk = (dir: string) => {
@@ -195,13 +212,28 @@ describe("the docs describe Harbor and nothing else", () => {
 				else if (/\.(ts|tsx|md|mjs)$/.test(entry)) out.push(full);
 			}
 		};
-		for (const dir of ["src", "runtime", "scripts", "docs", "integrations", "sandbox"]) {
+		for (const dir of SCANNED) {
 			walk(join(ROOT, dir));
 		}
+
+		// The repository root holds source too, and not only by accident: Next.js
+		// resolves `instrumentation.ts` from the root and nowhere else, so a file
+		// that used to sit under `src/` and be walked above now lives here. Read the
+		// root shallowly — the directories in it are either walked above or excluded
+		// on purpose (`drizzle/`, `node_modules/`, and the rest).
+		for (const entry of readdirSync(ROOT)) {
+			const full = join(ROOT, entry);
+			if (statSync(full).isDirectory()) continue;
+			if (/\.(ts|tsx|md|mjs)$/.test(entry)) out.push(full);
+		}
+
+		// Named explicitly as well as picked up by the root scan above, because the
+		// documents an operator is handed are not optional: if one is renamed away,
+		// this should fail on the missing file rather than quietly stop checking it.
 		for (const file of ["README.md", "CHAT.md", "DEPLOY.md", "CONNECTORS.md"]) {
 			out.push(join(ROOT, file));
 		}
-		return out;
+		return [...new Set(out)];
 	}
 
 	it("names no other project, in any doc or comment", () => {

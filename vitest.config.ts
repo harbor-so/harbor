@@ -1,6 +1,26 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
+const root = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig({
+	// Vitest does not read `paths` out of tsconfig.json — Next.js and tsx both do,
+	// so `@core/...` resolves everywhere else and would fail only under test, which
+	// is the worst place to discover it. Declared here by hand rather than with
+	// vite-tsconfig-paths: it is four lines, and a dependency whose whole job is to
+	// copy four lines out of a file we already control is not worth the supply chain.
+	//
+	// `runtime/` deliberately does not use these aliases and must keep relative
+	// specifiers — see the comment in sandbox/Dockerfile. It is compiled by its own
+	// tsconfig with no `paths` and the emit runs under bare Node with no
+	// node_modules, where an `@app/...` specifier cannot resolve.
+	resolve: {
+		alias: {
+			"@core": path.resolve(root, "core"),
+			"@app": path.resolve(root, "app"),
+		},
+	},
 	test: {
 		// The coordination tests share one Postgres and truncate between cases, so
 		// they must not run in parallel files.

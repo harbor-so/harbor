@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * A demo org that exercises every state the product has, so `db:seed` followed
  * by the dashboard shows something real: open work, work in flight, finished
@@ -6,10 +7,10 @@
  */
 
 import { eq } from "drizzle-orm";
-import { db, sql } from "../src/db/index.js";
-import { apiKeys, claims, events, orgs, projects, tasks } from "../src/db/schema.js";
-import { hashApiKey, mintApiKey } from "../src/lib/keys.js";
-import { scopeForTask } from "../src/lib/work.js";
+import { db, sql } from "@core/schema/index.js";
+import { apiKeys, claims, events, orgs, projects, tasks } from "@core/schema/schema.js";
+import { hashApiKey, mintApiKey } from "@core/kernel/keys.js";
+import { scopeForTask } from "@core/kernel/work.js";
 
 const now = new Date();
 

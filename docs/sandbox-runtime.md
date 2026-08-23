@@ -421,12 +421,12 @@ agent"; an image that bakes one in makes that claim false in the first place any
 looks. An operator standardised on an in-house CLI builds with all three off and
 installs their own in `.harbor/setup.sh`.
 
-The builder stage copies only `runtime/`, `src/contracts/`, `src/activity/`,
-`src/config.ts` and `src/db/schema.ts` (type-only, for the activity normalizers).
-`src/db` beyond the schema, `src/lib` and the Next.js app are deliberately absent:
-if the runtime ever grows an import into them the build fails, rather than silently
-pulling a database driver and a web framework into a container whose entire job is
-to run one agent.
+The builder stage copies only `runtime/`, `app/contracts/`, `app/activity/`,
+`core/kernel/config.ts` and `core/schema/schema.ts` (type-only, for the activity
+normalizers). The rest of `core/schema`, the rest of `core/kernel`, `app/lib` and
+the Next.js app are deliberately absent: if the runtime ever grows an import into
+them the build fails, rather than silently pulling a database driver and a web
+framework into a container whose entire job is to run one agent.
 
 Non-root, UID 10001 — not the `node` user's 1000, which collides with the first
 human account on most hosts and leaves a bind-mounted workspace owned by a
@@ -438,7 +438,7 @@ stranger.
 
 - **There is no gap-marker event type.** The overflow marker rides on `log` with a
   structured payload, because inventing a `SandboxEventType` in the sandbox is
-  exactly the drift `src/contracts` exists to prevent.
+  exactly the drift `app/contracts` exists to prevent.
 - **Reconnect backoff has no dedicated setting.** Base and ceiling are derived from
   `sandboxHeartbeatIntervalMs` and `sandboxStaleHeartbeatMs`. The derivation is
   defensible and documented, but an operator cannot tune the backoff independently

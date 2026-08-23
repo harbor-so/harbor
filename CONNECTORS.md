@@ -31,7 +31,7 @@ deployed service. Seven members:
 
 ## Verification, in order
 
-The ordering inside `src/app/api/webhooks/[connector]/route.ts` is the security
+The ordering inside `app/api/webhooks/[connector]/route.ts` is the security
 model, and each step may only use facts established by the one before it.
 
 **1. Signature, against the raw bytes.** Verifying a re-serialised object is the
@@ -111,7 +111,7 @@ Request the narrowest that works. Harbor's ingest paths do not use anything wide
 
 The GitHub App additionally needs `contents:write` and `pull_requests:write` for
 the *execution* path — pushing a branch and opening a pull request. Those are used
-by `src/git/`, under the prompting user's own token where the API allows it, and
+by `app/git/`, under the prompting user's own token where the API allows it, and
 are declared there rather than in the connector's `outboundWrites`. Listing them
 in both places would let the two declarations disagree, and this file is the one a
 reviewer reads.
@@ -172,8 +172,8 @@ returns. A silently skipped reply reads to the user as the agent ignoring them.
 
 ## Adding one
 
-1. Implement `Connector` in `src/connectors/<name>.ts`.
-2. Add it to the array in `src/connectors/registry.ts`.
+1. Implement `Connector` in `app/connectors/<name>.ts`.
+2. Add it to the array in `app/connectors/registry.ts`.
 3. Declare every outbound call in `outboundWrites`.
 4. Run `npm run docs:connectors`.
 

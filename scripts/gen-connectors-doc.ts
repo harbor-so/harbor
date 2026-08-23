@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * Generate the outbound-writes table in CONNECTORS.md from the code.
  *
@@ -13,7 +14,7 @@
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
-import { allConnectors } from "../src/connectors/registry.js";
+import { allConnectors } from "@app/connectors/registry.js";
 
 const START = "<!-- BEGIN GENERATED: outbound writes -->";
 const END = "<!-- END GENERATED: outbound writes -->";

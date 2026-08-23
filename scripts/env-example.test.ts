@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * .env.example must describe the deployment that exists.
  *
@@ -20,6 +21,33 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 
+/**
+ * The zones that hold shipped source. The licence split replaced the single
+ * `src/` tree with `core/` (Apache-2.0) and `app/` plus `pilot/` (FSL); the
+ * rest were never part of `src/` and are unchanged. A zone that does not exist
+ * yet is skipped rather than crashing the walk, so a zone can be named here
+ * before it has any files — which is what keeps this list the definition of
+ * "shipped source" rather than a snapshot of one day's directory listing.
+ */
+const SOURCE_ZONES = ["core", "app", "pilot", "runtime", "scripts", "integrations", "sandbox"];
+
+/**
+ * Next requires `instrumentation.ts` to sit at the repo root, so the zone split
+ * left a piece of shipped source outside every zone. Root-level files are
+ * therefore scanned too, minus the build and test harness below: those files
+ * configure the tools rather than the deployment, they were never inside `src/`
+ * and so were never in this guard's reach, and their DSN fallbacks belong to
+ * `drizzle-kit` and to vitest rather than to a running Harbor.
+ */
+const ROOT_LEVEL_TOOLING = new Set([
+	"drizzle.config.ts",
+	"next.config.js",
+	"next-env.d.ts",
+	"postcss.config.js",
+	"vitest.config.ts",
+	"vitest.setup.ts",
+]);
+
 function walk(dir: string, out: string[] = []): string[] {
 	for (const entry of readdirSync(dir)) {
 		if (entry === "node_modules" || entry === ".next" || entry === ".git") continue;
@@ -28,6 +56,25 @@ function walk(dir: string, out: string[] = []): string[] {
 		else if (/\.(ts|tsx|mjs|js|sh)$/.test(entry)) out.push(full);
 	}
 	return out;
+}
+
+/** Every shipped source file: the zones, plus the stragglers at the repo root. */
+function sourceFiles(): string[] {
+	const zoned = SOURCE_ZONES.map((dir) => join(ROOT, dir))
+		.filter((dir) => {
+			try {
+				return statSync(dir).isDirectory();
+			} catch {
+				return false;
+			}
+		})
+		.flatMap((dir) => walk(dir));
+	const rooted = readdirSync(ROOT)
+		.filter((entry) => !ROOT_LEVEL_TOOLING.has(entry))
+		.filter((entry) => /\.(ts|tsx|mjs|js|sh)$/.test(entry))
+		.map((entry) => join(ROOT, entry))
+		.filter((full) => statSync(full).isFile());
+	return [...zoned, ...rooted];
 }
 
 /** Every variable the example file names, assignments and commented knobs alike. */
@@ -42,17 +89,7 @@ function declaredVariables(): string[] {
 }
 
 function shippedSource(): string {
-	const roots = ["src", "runtime", "scripts", "integrations", "sandbox"]
-		.map((dir) => join(ROOT, dir))
-		.filter((dir) => {
-			try {
-				return statSync(dir).isDirectory();
-			} catch {
-				return false;
-			}
-		});
-	return roots
-		.flatMap((dir) => walk(dir))
+	return sourceFiles()
 		.map((file) => readFileSync(file, "utf8"))
 		.join("\n");
 }
@@ -105,16 +142,7 @@ describe(".env.example drift", () => {
 
 		// Tests set env vars to drive behaviour under test; that is not an operator
 		// knob and does not belong in an example file.
-		const source = ["src", "runtime", "scripts", "integrations", "sandbox"]
-			.map((dir) => join(ROOT, dir))
-			.filter((dir) => {
-				try {
-					return statSync(dir).isDirectory();
-				} catch {
-					return false;
-				}
-			})
-			.flatMap((dir) => walk(dir))
+		const source = sourceFiles()
 			.filter((file) => !/\.test\.(ts|tsx|mts)$/.test(file))
 			.map((file) => readFileSync(file, "utf8"))
 			.join("\n");
@@ -164,15 +192,13 @@ describe(".env.example drift", () => {
 
 	it("the fallback DSN literal lives in exactly the places that own it", () => {
 		// The dev DSN used to be pasted into three SSE routes; databaseUrl() in
-		// src/db/index.ts is now the one resolution. A new paste is a new place
-		// for a changed default to be missed.
+		// core/schema/index.ts is now the one resolution. A new paste is a new
+		// place for a changed default to be missed.
 		const literal = "postgres://harbor:harbor@localhost:5433/harbor";
-		const offenders = ["src", "runtime", "scripts"]
-			.map((dir) => join(ROOT, dir))
-			.flatMap((dir) => walk(dir))
+		const offenders = sourceFiles()
 			.filter((file) => !/\.test\.(ts|mts)$/.test(file))
 			.filter((file) => readFileSync(file, "utf8").includes(literal))
 			.map((file) => file.slice(ROOT.length + 1));
-		expect(offenders.sort()).toEqual(["src/db/index.ts"]);
+		expect(offenders.sort()).toEqual(["core/schema/index.ts"]);
 	});
 });

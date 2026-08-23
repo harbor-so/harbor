@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * Detection is a pile of precedence rules, so it is a pure function and every
  * rule is one line here.

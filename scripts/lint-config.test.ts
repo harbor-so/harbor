@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * Tests for the lint rule, including its error message.
  *
@@ -33,21 +34,21 @@ const lintTree = rawLint as (root: string) => Violation[];
 
 describe("finding hardcoded tunables", () => {
 	it("fires on a module-level timeout constant", () => {
-		const found = findViolations("const BOOT_TIMEOUT_MS = 90_000;\n", "src/example.ts");
+		const found = findViolations("const BOOT_TIMEOUT_MS = 90_000;\n", "app/example.ts");
 		expect(found).toHaveLength(1);
 		expect(found[0]!.name).toBe("BOOT_TIMEOUT_MS");
 	});
 
 	it("fires on camelCase and on an exported constant", () => {
-		expect(findViolations("const pollIntervalMs = 5000;\n", "src/a.ts")).toHaveLength(1);
-		expect(findViolations("export const MAX_RETRIES = 3;\n", "src/a.ts")).toHaveLength(1);
-		expect(findViolations("const CIRCUIT_COOLDOWN = 60000;\n", "src/a.ts")).toHaveLength(1);
+		expect(findViolations("const pollIntervalMs = 5000;\n", "app/a.ts")).toHaveLength(1);
+		expect(findViolations("export const MAX_RETRIES = 3;\n", "app/a.ts")).toHaveLength(1);
+		expect(findViolations("const CIRCUIT_COOLDOWN = 60000;\n", "app/a.ts")).toHaveLength(1);
 	});
 
 	it("fires through a type annotation and a trailing comment", () => {
 		const found = findViolations(
 			"const STALE_THRESHOLD_MS: number = 45_000; // three heartbeats\n",
-			"src/a.ts",
+			"app/a.ts",
 		);
 		expect(found).toHaveLength(1);
 	});
@@ -57,15 +58,15 @@ describe("finding hardcoded tunables", () => {
 	 * would produce noise, and each is a real pattern in this codebase.
 	 */
 	it("does not fire on identifiers that are not tunables", () => {
-		expect(findViolations("const IV_BYTES = 12;\n", "src/a.ts")).toHaveLength(0);
-		expect(findViolations("const KEY_BYTES = 32;\n", "src/a.ts")).toHaveLength(0);
-		expect(findViolations("const VERSION = 1;\n", "src/a.ts")).toHaveLength(0);
+		expect(findViolations("const IV_BYTES = 12;\n", "app/a.ts")).toHaveLength(0);
+		expect(findViolations("const KEY_BYTES = 32;\n", "app/a.ts")).toHaveLength(0);
+		expect(findViolations("const VERSION = 1;\n", "app/a.ts")).toHaveLength(0);
 	});
 
 	it("does not fire on non-numeric values or on inline numbers", () => {
-		expect(findViolations('const TIMEOUT_MESSAGE = "too slow";\n', "src/a.ts")).toHaveLength(0);
-		expect(findViolations("const MAX_ITEMS = items.length;\n", "src/a.ts")).toHaveLength(0);
-		expect(findViolations("await sleep(30_000);\n", "src/a.ts")).toHaveLength(0);
+		expect(findViolations('const TIMEOUT_MESSAGE = "too slow";\n', "app/a.ts")).toHaveLength(0);
+		expect(findViolations("const MAX_ITEMS = items.length;\n", "app/a.ts")).toHaveLength(0);
+		expect(findViolations("await sleep(30_000);\n", "app/a.ts")).toHaveLength(0);
 	});
 
 	it("does not fire inside a function body", () => {
@@ -73,26 +74,26 @@ describe("finding hardcoded tunables", () => {
 		// Indented by a tab, so the module-level anchor does not match. Locals are
 		// out of scope on purpose: the rule is about the deployment's configuration
 		// surface, not about every number anyone ever writes.
-		expect(findViolations(source, "src/a.ts")).toHaveLength(0);
+		expect(findViolations(source, "app/a.ts")).toHaveLength(0);
 	});
 
 	it("honours a documented escape hatch on the line above", () => {
 		const source =
 			"// harbor-lint-allow-constant: the protocol fixes this at 30s\nconst PROTOCOL_TIMEOUT_MS = 30_000;\n";
-		expect(findViolations(source, "src/a.ts")).toHaveLength(0);
+		expect(findViolations(source, "app/a.ts")).toHaveLength(0);
 	});
 });
 
 describe("the error message", () => {
-	const violation = findViolations("const SPAWN_TIMEOUT_MS = 90_000;\n", "src/sandbox/x.ts")[0]!;
+	const violation = findViolations("const SPAWN_TIMEOUT_MS = 90_000;\n", "app/sandbox/x.ts")[0]!;
 
 	it("names the file and line", () => {
-		expect(violation.message).toContain("src/sandbox/x.ts:1");
+		expect(violation.message).toContain("app/sandbox/x.ts:1");
 	});
 
 	/** Without this, the reader knows they broke a rule but not how to comply. */
 	it("says exactly what to do instead", () => {
-		expect(violation.message).toContain("src/config.ts");
+		expect(violation.message).toContain("core/kernel/config.ts");
 		expect(violation.message).toContain('setting("...")');
 	});
 
@@ -141,7 +142,7 @@ describe("the escape hatch", () => {
 			"const MAX_BODY_BYTES = 4_096;",
 			"",
 		].join("\n");
-		expect(findViolations(source, "src/a.ts")).toHaveLength(0);
+		expect(findViolations(source, "app/a.ts")).toHaveLength(0);
 	});
 
 	it("accepts a marker inside a jsdoc block", () => {
@@ -152,7 +153,7 @@ describe("the escape hatch", () => {
 			"const MAX_FRAME_BYTES = 65_536;",
 			"",
 		].join("\n");
-		expect(findViolations(source, "src/a.ts")).toHaveLength(0);
+		expect(findViolations(source, "app/a.ts")).toHaveLength(0);
 	});
 
 	/**
@@ -168,7 +169,7 @@ describe("the escape hatch", () => {
 			"const POLL_INTERVAL_MS = 5_000;",
 			"",
 		].join("\n");
-		const found = findViolations(source, "src/a.ts");
+		const found = findViolations(source, "app/a.ts");
 		expect(found).toHaveLength(1);
 		expect(found[0]!.name).toBe("POLL_INTERVAL_MS");
 	});
@@ -183,26 +184,26 @@ describe("arithmetic expressions and the widened name set", () => {
 	 * rule that does not fire is worse than none, because it is believed.
 	 */
 	it("fires on arithmetic over literals — the careful author's spelling", () => {
-		expect(findViolations("const REPLAY_WINDOW_SECONDS = 60 * 5;\n", "src/a.ts")).toHaveLength(1);
-		expect(findViolations("const MAX_LEASE_MINUTES = 8 * 60;\n", "src/a.ts")).toHaveLength(1);
-		expect(findViolations("const MAX_AGE_SECONDS = 30 * 86_400;\n", "src/a.ts")).toHaveLength(1);
+		expect(findViolations("const REPLAY_WINDOW_SECONDS = 60 * 5;\n", "app/a.ts")).toHaveLength(1);
+		expect(findViolations("const MAX_LEASE_MINUTES = 8 * 60;\n", "app/a.ts")).toHaveLength(1);
+		expect(findViolations("const MAX_AGE_SECONDS = 30 * 86_400;\n", "app/a.ts")).toHaveLength(1);
 	});
 
 	it("fires on whitespace variants and a trailing comment", () => {
-		expect(findViolations("const MAX_LEASE_MINUTES = 8*60;\n", "src/a.ts")).toHaveLength(1);
+		expect(findViolations("const MAX_LEASE_MINUTES = 8*60;\n", "app/a.ts")).toHaveLength(1);
 		expect(
-			findViolations("const MAX_LEASE_MINUTES = 8 * 60; // a working day\n", "src/a.ts"),
+			findViolations("const MAX_LEASE_MINUTES = 8 * 60; // a working day\n", "app/a.ts"),
 		).toHaveLength(1);
 	});
 
 	it("fires on _MINUTES and MIN_ names", () => {
-		expect(findViolations("const DEFAULT_LEASE_MINUTES = 30;\n", "src/a.ts")).toHaveLength(1);
-		expect(findViolations("const MIN_SECRET_LENGTH = 32;\n", "src/a.ts")).toHaveLength(1);
+		expect(findViolations("const DEFAULT_LEASE_MINUTES = 30;\n", "app/a.ts")).toHaveLength(1);
+		expect(findViolations("const MIN_SECRET_LENGTH = 32;\n", "app/a.ts")).toHaveLength(1);
 	});
 
 	it("does not fire on identifier operands — a computation is not a configuration", () => {
-		expect(findViolations("const TOTAL_MS = a * b;\n", "src/a.ts")).toHaveLength(0);
-		expect(findViolations("const WINDOW_MS = base * factor;\n", "src/a.ts")).toHaveLength(0);
+		expect(findViolations("const TOTAL_MS = a * b;\n", "app/a.ts")).toHaveLength(0);
+		expect(findViolations("const WINDOW_MS = base * factor;\n", "app/a.ts")).toHaveLength(0);
 	});
 });
 
@@ -220,7 +221,7 @@ describe("the sync-handoff rule", () => {
 	it("fires on an await inserted into the critical block", () => {
 		const found = findSyncHandoffViolations(
 			region("\tsend(1);\n\tconst x = await db.select();\n\tsessionId = s;"),
-			"src/app/api/sessions/[key]/stream/route.ts",
+			"app/api/sessions/[key]/stream/route.ts",
 		);
 		expect(found).toHaveLength(1);
 		expect(found[0]!.line).toBe(4);
@@ -228,16 +229,16 @@ describe("the sync-handoff rule", () => {
 
 	it("fires on .then( and for await, the awaits wearing disguises", () => {
 		expect(
-			findSyncHandoffViolations(region("\tdb.select().then(() => {});"), "src/a.ts"),
+			findSyncHandoffViolations(region("\tdb.select().then(() => {});"), "app/a.ts"),
 		).toHaveLength(1);
 		expect(
-			findSyncHandoffViolations(region("\tfor await (const x of xs) {}"), "src/a.ts"),
+			findSyncHandoffViolations(region("\tfor await (const x of xs) {}"), "app/a.ts"),
 		).toHaveLength(1);
 	});
 
 	it("lets a comment discuss await without firing", () => {
 		expect(
-			findSyncHandoffViolations(region("\t// an await here would lose events\n\tsend(1);"), "src/a.ts"),
+			findSyncHandoffViolations(region("\t// an await here would lose events\n\tsend(1);"), "app/a.ts"),
 		).toHaveLength(0);
 	});
 
@@ -245,7 +246,7 @@ describe("the sync-handoff rule", () => {
 		expect(
 			findSyncHandoffViolations(
 				region("\tsend(\"snapshot\", snapshot);\n\tcontiguousThrough = n;\n\tsessionId = s;"),
-				"src/a.ts",
+				"app/a.ts",
 			),
 		).toHaveLength(0);
 	});
@@ -253,7 +254,7 @@ describe("the sync-handoff rule", () => {
 	it("treats an unterminated begin marker as a violation itself", () => {
 		const found = findSyncHandoffViolations(
 			"// harbor-sync-handoff-begin\nsend(1);\n",
-			"src/a.ts",
+			"app/a.ts",
 		);
 		expect(found).toHaveLength(1);
 		expect(found[0]!.message).toContain("unterminated");
@@ -262,7 +263,7 @@ describe("the sync-handoff rule", () => {
 	it("says what breaks and what to do about it", () => {
 		const [violation] = findSyncHandoffViolations(
 			region("\tawait metrics.record();"),
-			"src/a.ts",
+			"app/a.ts",
 		);
 		expect(violation!.message).toContain("snapshot");
 		expect(violation!.message).toContain("one missing event");
@@ -274,7 +275,7 @@ describe("the sync-handoff rule", () => {
 		// load-bearing. This is the assertion that stops a refactor from deleting
 		// the comment and, with it, the entire protection.
 		const { readFileSync } = require("node:fs") as typeof import("node:fs");
-		const source = readFileSync("src/app/api/sessions/[key]/stream/route.ts", "utf8");
+		const source = readFileSync("app/api/sessions/[key]/stream/route.ts", "utf8");
 		expect(source).toContain("harbor-sync-handoff-begin");
 		expect(source).toContain("harbor-sync-handoff-end");
 	});

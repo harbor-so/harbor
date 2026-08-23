@@ -11,7 +11,7 @@ can have: one duplicate is an unbounded bill, and two agents on one branch is
 damage in somebody's git history that no amount of cleanup undoes.
 
 The obvious mechanism is to take a lease before calling the provider. Harbor does
-that — `claim()` in `src/lib/work.ts` is the lease primitive and the admission
+that — `claim()` in `core/kernel/work.ts` is the lease primitive and the admission
 path goes through it. It is not enough, and the gap is not theoretical. Claiming
 a lease before contacting a provider does not survive:
 
@@ -114,7 +114,7 @@ open circuit hides any concurrent real outage behind a configuration mistake.
 ### Positive
 
 - The four ambiguous failures have defined, tested outcomes rather than
-  undefined ones. Each is a case in `src/sandbox/manager.test.ts`, run against
+  undefined ones. Each is a case in `app/sandbox/manager.test.ts`, run against
   real Postgres and a fake provider that can be told to lose its response.
 - An orphaned container is *discoverable*. Before the attempt label, a lost
   response produced a box nothing in the system could name.

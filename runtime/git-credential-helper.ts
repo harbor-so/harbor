@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * `git credential-harbor` — a short-lived credential, fetched per operation.
  *
@@ -45,8 +46,8 @@
 import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { setting } from "../src/config.js";
-import { correlationHeader } from "../src/contracts/index.js";
+import { setting } from "../core/kernel/config.js";
+import { correlationHeader } from "../app/contracts/index.js";
 
 /** The operations git may ask a helper to perform. `store` is a deliberate no-op. */
 export const CREDENTIAL_OPERATIONS = ["get", "store", "erase"] as const;

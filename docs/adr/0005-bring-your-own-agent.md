@@ -15,13 +15,13 @@ decision came with a procurement cycle, a security review and a set of habits.
 Requiring them to switch makes re-running last quarter's evaluation the price of
 trying our infrastructure, which means most of them do not try it.
 
-Harbor already had most of what was needed: `src/activity/` contains stream
+Harbor already had most of what was needed: `app/activity/` contains stream
 normalizers for Claude Code, Codex, OpenCode and Cursor, written for a different
 purpose.
 
 ## Decision
 
-`AgentAdapter` (`src/contracts/agent.ts`) is the integration point, and it is
+`AgentAdapter` (`app/contracts/agent.ts`) is the integration point, and it is
 defined before either the sandbox runtime or cost accounting, because both depend
 on answers it gives. Six members:
 

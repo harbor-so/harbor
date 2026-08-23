@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * What to install when a repository has no `.harbor/setup.sh`.
  *

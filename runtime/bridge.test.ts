@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * The bridge under the conditions it exists for: a partition, a flapping
  * connection, a control plane sending something this image does not understand,
@@ -12,8 +13,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { GitIdentityError } from "../src/contracts/agent.js";
-import type { SandboxEvent } from "../src/contracts/index.js";
+import { GitIdentityError } from "../app/contracts/agent.js";
+import type { SandboxEvent } from "../app/contracts/index.js";
 import {
 	Bridge,
 	asCommand,

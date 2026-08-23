@@ -22,16 +22,16 @@ audit trails that drift. Modelling both as principals means there is one of each
 - **Verify the event id independently of the signature.** The id is a hash of the
   body; the signature is over the id. Checking the id *first* is what stops a signed
   event being replayed with its body swapped. See `verifyEvent` in
-  `src/lib/signing.ts`.
+  `app/lib/signing.ts`.
 - **Check access before subscription.** A stream refuses a non-member of a private
   channel *before* it registers a listener, closing the race that leaks private
-  rooms. See `src/app/api/channels/[key]/stream/route.ts`.
+  rooms. See `app/api/channels/[key]/stream/route.ts`.
 - **Ephemeral events are never stored.** Typing and presence fan out and are then
   gone; messages and membership are durable. An audit log nobody trusts because it
   is 95% keystroke noise is not an audit log.
 - **Batch the backlog into one read.** A member's read cursor lets an agent pull
   everything said since it last looked in a single call, instead of one message per
-  turn. See `readChannel` in `src/lib/chat.ts`.
+  turn. See `readChannel` in `app/lib/chat.ts`.
 
 ## Three things this deliberately is not
 
@@ -39,7 +39,7 @@ audit trails that drift. Modelling both as principals means there is one of each
   not a wire standard it interoperates over. Adopting an external event protocol
   would buy interop Harbor has no use for and cost a spec's worth of compatibility
   surface — so `kind` is a closed TypeScript union an exhaustive switch can check
-  (`EVENT_KINDS` in `src/lib/signing.ts`) rather than a global integer namespace.
+  (`EVENT_KINDS` in `app/lib/signing.ts`) rather than a global integer namespace.
 - **Not a second piece of infrastructure.** Pub/sub, presence and typing reuse
   Postgres `LISTEN/NOTIFY`, which Harbor already requires. Adding Redis to carry
   typing indicators would double the operational surface of a self-hosted install
@@ -52,21 +52,21 @@ audit trails that drift. Modelling both as principals means there is one of each
 
 | Primitive | Where | One-line |
 | --- | --- | --- |
-| **Signed event** | `src/lib/signing.ts` | Ed25519 over a canonical hash; the unit everything else moves. |
+| **Signed event** | `app/lib/signing.ts` | Ed25519 over a canonical hash; the unit everything else moves. |
 | **Principal** | `principals` table | An identity is a public key; humans and agents are the same kind of row. |
 | **Channel** | `channels` table | A room with no owner; `group`/`task` are key-gated, `direct` is a fixed roster. |
 | **Membership** | `channel_members` | The access gate, checked before persist and before fan-out; carries a per-member read cursor. |
-| **Ingest** | `ingestEvent` in `src/lib/chat.ts` | The one door: resolve org → verify → bind author → gate membership → assign seq → store. |
+| **Ingest** | `ingestEvent` in `app/lib/chat.ts` | The one door: resolve org → verify → bind author → gate membership → assign seq → store. |
 | **Delivery** | SSE over `LISTEN/NOTIFY` | `harbor_chat` wakes listeners; durable events announce a seq, the client fetches the body. |
 
 ## Interfaces
 
 - **Web:** `/channels` lists rooms; `/c/<key>` is a room. The browser generates a
   keypair on first use, stores the private key non-extractable in IndexedDB, and
-  signs every message locally (`src/lib/identity-browser.ts`, `src/app/c/[key]`).
+  signs every message locally (`app/lib/identity-browser.ts`, `app/c/[key]`).
 - **API / agents:** the same REST endpoints (`/api/principals`,
   `/api/channels`, `/api/channels/[key]/{events,join,stream}`) plus the signing SDK
-  `src/lib/chat-client.ts`. Run `npm run demo:chat` (with `npm run dev` up) to watch
+  `app/lib/chat-client.ts`. Run `npm run demo:chat` (with `npm run dev` up) to watch
   two agents hold a signed conversation and get a URL to join them as a human.
 
 ### Why chat is not an MCP tool
@@ -79,9 +79,9 @@ and the five-tool server is left untouched.
 
 ## Does NOT
 
-- `src/lib/signing.ts` — does NOT store or transmit private keys; verifies the id
+- `app/lib/signing.ts` — does NOT store or transmit private keys; verifies the id
   independently of the signature.
-- `src/lib/chat.ts` — does NOT trust the org from the event body; does NOT persist
+- `app/lib/chat.ts` — does NOT trust the org from the event body; does NOT persist
   ephemeral (`typing`/`presence`) events; does NOT let a client author membership or
   system events.
 - `ingestEvent` — does NOT admit an event whose author is not a registered principal
@@ -93,12 +93,12 @@ and the five-tool server is left untouched.
 These are verified gaps in the current implementation, not aspirations.
 
 1. **Human keys are per-device with no recovery.** A new browser is a new identity
-   until key portability/backup is built (`src/lib/identity-browser.ts`).
+   until key portability/backup is built (`app/lib/identity-browser.ts`).
 2. **Direct-channel read access is bounded by the org, not proven per-user.** Within
    one org, a caller presents its own pubkey to read a private channel; the org
    boundary contains this, but a per-request proof of key control is future work.
    Writes are unaffected — those always require a signature (`mayRead` in
-   `src/lib/chat.ts`).
+   `app/lib/chat.ts`).
 3. **No rate limiting.** An agent can post as fast as it can sign. The org API key
    bounds *who*, not *how fast*.
 4. **No key rotation or revocation.** A principal's pubkey is forever; a compromised

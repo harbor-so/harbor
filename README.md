@@ -254,8 +254,8 @@ anything else that can be driven from a command line.
 Two runtimes are supported without being drivable. Cursor has no supported
 headless mode, so it has no adapter — `runtime/adapters/index.ts` refuses it by
 name rather than pretending. Devin runs on its own infrastructure and is tracked
-by polling its API (`src/devin/`). Both report activity into Harbor through
-`src/activity/` — you see what they are doing on the dashboard and their work
+by polling its API (`app/devin/`). Both report activity into Harbor through
+`app/activity/` — you see what they are doing on the dashboard and their work
 takes leases like anything else — but Harbor does not boot the sandbox or hold
 the process. That distinction is the difference between a runtime Harbor *runs*
 and one it *watches*, and it is worth keeping straight.
@@ -457,6 +457,36 @@ request, not six.
 
 ---
 
+## Repository layout
+
+The source is split into three top-level zones, and the split is a licence
+boundary as much as a directory one. Each zone carries its own `LICENSE`, and
+every `.ts`, `.tsx` and `.mjs` file carries an SPDX header on its first line —
+or its second, when line one is a shebang or a `"use client"` directive.
+
+| Zone | Contents | SPDX |
+| --- | --- | --- |
+| `core/` | The coordination kernel: `core/kernel/` (leases, scope, rights, locks, auth, the event bus, config), `core/schema/` (the Drizzle schema and the database connection), `core/mcp/` (the five-tool definitions, their builder and the stdio transport). | `Apache-2.0` |
+| `app/` | Everything a deployment serves: the Next.js router at `app/` itself, plus `app/lib/`, `app/sandbox/`, `app/git/`, `app/connectors/`, `app/triggers/`, `app/activity/`, `app/contracts/`, `app/images/`, `app/devin/`, `app/mcp/`, `app/components/`. | `LicenseRef-FSL-1.1-Apache-2.0` |
+| `pilot/` | Reserved. It holds its licence and nothing else yet, so that the third zone exists before the first file that needs it. | `LicenseRef-FSL-1.1-Apache-2.0` |
+
+**`core/` imports nothing outside `core/`.** That is the rule the whole split
+exists to protect: the kernel is the part another project can vendor under
+Apache-2.0, and a single import reaching up into `app/` would make that untrue
+without anyone noticing. Imports run one way — `app/` may import `@core/*`,
+`core/` may not import `@app/*` — and the two path aliases in `tsconfig.json`
+exist so that the direction is visible in the import line itself rather than
+buried in a chain of `../..`.
+
+Three directories sit outside the zones on purpose. `runtime/` is the sandbox
+supervisor and its agent adapters, which ship inside the sandbox image rather
+than beside the server. `scripts/` holds the operator commands and the guard
+tests that check this repository against its own documentation. And
+`instrumentation.ts` sits at the repository root because Next.js resolves it
+from there and nowhere else.
+
+---
+
 ## Tests
 
 ```bash
@@ -477,7 +507,7 @@ are database indexes and how code reacts to them — a mock happily passes a
 read-then-write check that races.
 
 Pure modules get zero-mock suites at exact boundary values: 99 cases on sandbox
-decisions alone (`npx vitest run src/sandbox/decisions.test.ts`). Provider tests
+decisions alone (`npx vitest run app/sandbox/decisions.test.ts`). Provider tests
 run against real Docker and **skip loudly** when it is absent rather than
 silently passing.
 

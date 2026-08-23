@@ -1,7 +1,7 @@
 # The worker: both MCP surfaces, and every background loop.
 #
 # A Deployment, not a StatefulSet, and that is a decision rather than an
-# oversight. `src/mcp/server.ts` is explicitly stateless — MCP sessions are not
+# oversight. `app/mcp/server.ts` is explicitly stateless — MCP sessions are not
 # persisted (`sessionIdGenerator: undefined`), so any process can serve any
 # request — and every loop takes an advisory lock or is a compare-and-set. A
 # StatefulSet buys stable network identity and ordered rollout, neither of which

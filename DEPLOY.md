@@ -152,7 +152,7 @@ Job provider does not exist yet and is the obvious contribution — it is the on
 way to get a real isolation boundary that stays inside your own cluster — and the
 provider contract test suite is what proves one correct.
 
-The full provider list is `SANDBOX_PROVIDER_NAMES` in `src/sandbox/registry.ts`,
+The full provider list is `SANDBOX_PROVIDER_NAMES` in `app/sandbox/registry.ts`,
 and their isolation tiers are in [docs/SECURITY.md](./docs/SECURITY.md). It is
 deliberately not restated here — this document carried "the shipped providers are
 `docker` and `local`" for three releases after that stopped being true.
@@ -208,7 +208,7 @@ and Cloud SQL all work unchanged. Three caveats, and the first is a security one
   note above about one connection per open stream.
 
 Harbor checks both of these at startup and prints a warning naming the problem —
-`describeDatabaseTls` in `src/db/tls.ts`. It warns rather than rewriting your
+`describeDatabaseTls` in `core/schema/tls.ts`. It warns rather than rewriting your
 DSN, because `require` plus `NODE_EXTRA_CA_CERTS` is a legitimate configuration
 and silently upgrading it would break exactly the deployments that chose it
 deliberately. `docker run <image> doctor` prints the same report on demand.

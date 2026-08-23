@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * The escape hatch: any agent an operator can run non-interactively.
  *
@@ -30,8 +31,8 @@
  * the path to reinterpret it.
  */
 
-import { normalizeClaudeStyle } from "../../src/activity/claude-style.js";
-import { summarizeTool } from "../../src/activity/types.js";
+import { normalizeClaudeStyle } from "../../app/activity/claude-style.js";
+import { summarizeTool } from "../../app/activity/types.js";
 import type {
 	AgentAdapter,
 	AgentCredentialSpec,
@@ -39,7 +40,7 @@ import type {
 	AgentStreamEvent,
 	AgentTurnRequest,
 	AgentUsage,
-} from "../../src/contracts/agent.js";
+} from "../../app/contracts/agent.js";
 import {
 	activityToStreamEvents,
 	assertNever,

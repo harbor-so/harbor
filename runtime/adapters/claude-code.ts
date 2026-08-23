@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * Claude Code, driven headless.
  *
@@ -14,14 +15,14 @@
  * authoritative token counts and cost.
  */
 
-import { normalizeClaudeStyle } from "../../src/activity/claude-style.js";
+import { normalizeClaudeStyle } from "../../app/activity/claude-style.js";
 import type {
 	AgentAdapter,
 	AgentInterrupt,
 	AgentStreamEvent,
 	AgentTurnRequest,
 	AgentUsage,
-} from "../../src/contracts/agent.js";
+} from "../../app/contracts/agent.js";
 import {
 	activityToStreamEvents,
 	baseEnv,

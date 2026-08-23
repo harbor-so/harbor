@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * The sandbox's half of the control-plane connection: SSE down, HTTP POST up.
  *
@@ -30,20 +31,20 @@
  */
 
 import { execFile } from "node:child_process";
-import { setting } from "../src/config.js";
+import { setting } from "../core/kernel/config.js";
 import {
 	attributedIdentity,
 	GitIdentityError,
 	type AgentInterrupt,
 	type GitIdentity,
-} from "../src/contracts/agent.js";
+} from "../app/contracts/agent.js";
 import {
 	correlationHeader,
 	type BridgeCommand,
 	type BridgeCommandType,
 	type SandboxEvent,
 	type SandboxEventType,
-} from "../src/contracts/index.js";
+} from "../app/contracts/index.js";
 import {
 	assertNever,
 	pushBounded,

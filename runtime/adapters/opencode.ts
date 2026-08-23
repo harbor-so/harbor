@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * opencode, driven server-first.
  *
@@ -25,15 +26,15 @@
  *    would show an empty transcript for a turn that worked perfectly.
  */
 
-import { opencodeNormalizer } from "../../src/activity/opencode.js";
-import { summarizeTool } from "../../src/activity/types.js";
+import { opencodeNormalizer } from "../../app/activity/opencode.js";
+import { summarizeTool } from "../../app/activity/types.js";
 import type {
 	AgentAdapter,
 	AgentInterrupt,
 	AgentStreamEvent,
 	AgentTurnRequest,
 	AgentUsage,
-} from "../../src/contracts/agent.js";
+} from "../../app/contracts/agent.js";
 import {
 	activityToStreamEvents,
 	firstString,

@@ -25,8 +25,8 @@ docs
 deploy
 integrations/*/node_modules
 
-# The build compiles TypeScript from `src/`, so the sources stay — but the tests
-# and their fixtures are dead weight in a production image.
+# The build compiles TypeScript from `core/` and `app/`, so the sources stay — but
+# the tests and their fixtures are dead weight in a production image.
 **/*.test.ts
 **/*.test.tsx
 **/*.test.mts

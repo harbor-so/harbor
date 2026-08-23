@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * The container entrypoint for an image build. It boots, it does not serve.
  *
@@ -19,8 +20,8 @@
  * the human debugging a failed build. There is no other consumer.
  */
 
-import { AGENT_RUNTIMES } from "../src/contracts/agent.js";
-import { validateConfig } from "../src/config.js";
+import { AGENT_RUNTIMES } from "../app/contracts/agent.js";
+import { validateConfig } from "../core/kernel/config.js";
 import { boot, parseRepos, type BridgeSink, type SupervisorConfig } from "./supervisor.js";
 
 async function main(env: NodeJS.ProcessEnv = process.env): Promise<number> {

@@ -1,10 +1,11 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * Fail the build on a hardcoded timeout, threshold or limit.
  *
  * This rule exists because the discipline it enforces is the kind that decays
- * silently. `src/config.ts` says every tunable is operator-configurable, and that
- * claim stays true only for as long as nobody writes
+ * silently. `core/kernel/config.ts` says every tunable is operator-configurable,
+ * and that claim stays true only for as long as nobody writes
  * `const BOOT_TIMEOUT_MS = 90_000` halfway down a lifecycle file — at which point
  * the claim is false, nothing fails, and the self-hoster whose monorepo takes
  * four minutes to boot has to fork the project.
@@ -16,7 +17,7 @@
  * a module-level `const` whose NAME says it is a duration or a limit and whose
  * VALUE is a numeric literal. It does not fire on:
  *
- *   - anything inside `src/config.ts`, which is where these belong;
+ *   - anything inside `core/kernel/config.ts`, which is where these belong;
  *   - test files, where a fixed timing boundary is the entire point of the test;
  *   - `fallback:` values inside the SETTINGS registry;
  *   - numbers used inline, which are usually array sizes and slice bounds.
@@ -29,6 +30,14 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
+/**
+ * The walk starts at the repository root rather than at a single source
+ * directory, so it covers every licence zone — `core/`, `app/`, `pilot/` — plus
+ * `runtime/`, `integrations/` and the root-level `instrumentation.ts`, without
+ * anybody having to remember to add a zone here when one is created. A lint that
+ * has to be told about a new directory is a lint that silently stops covering
+ * the newest code, which is the code most likely to be wrong.
+ */
 const ROOT = process.cwd();
 
 /**
@@ -39,7 +48,7 @@ const ROOT = process.cwd();
  */
 const TUNABLE_NAME = /(TIMEOUT|INTERVAL|_MS$|_SECONDS$|_MINUTES$|_DELAY|COOLDOWN|THRESHOLD|MAX_|MIN_|_LIMIT|LIMIT_|RETENTION|BACKOFF|WINDOW_MS|TTL)/i;
 
-const EXEMPT_FILES = new Set(["src/config.ts"]);
+const EXEMPT_FILES = new Set(["core/kernel/config.ts"]);
 
 const EXEMPT_PATTERNS = [
 	/\.test\.ts$/,
@@ -110,7 +119,7 @@ export function findViolations(source, file) {
 			value: literal,
 			message:
 				`${file}:${index + 1}  ${name} is a hardcoded tunable.\n`
-				+ `    Move it into the SETTINGS registry in src/config.ts and read it with `
+				+ `    Move it into the SETTINGS registry in core/kernel/config.ts and read it with `
 				+ `setting("...").\n`
 				+ `    Every timeout, threshold and limit in Harbor is operator-configurable and `
 				+ `per-repository\n`

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * PID 1 inside a Harbor sandbox: bring the box up, then hand it to the bridge.
  *
@@ -30,7 +31,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { mkdir, rm } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import { join } from "node:path";
-import { setting, validateConfig } from "../src/config.js";
+import { setting, validateConfig } from "../core/kernel/config.js";
 import type {
 	AgentAdapter,
 	AgentInterrupt,
@@ -38,9 +39,9 @@ import type {
 	AgentStreamEvent,
 	AgentTurnRequest,
 	AgentUsage,
-} from "../src/contracts/agent.js";
-import { AGENT_RUNTIMES } from "../src/contracts/agent.js";
-import { BAKED_WORKSPACE_ROOT, type BootMode } from "../src/contracts/index.js";
+} from "../app/contracts/agent.js";
+import { AGENT_RUNTIMES } from "../app/contracts/agent.js";
+import { BAKED_WORKSPACE_ROOT, type BootMode } from "../app/contracts/index.js";
 import { adapterFor, stripAnsi, usageAccumulationFor } from "./adapters/index.js";
 import {
 	TUNNEL_ENV_PATH,

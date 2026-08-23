@@ -30,18 +30,23 @@ WORKDIR /build
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
-# Only what the in-sandbox runtime actually imports. `src/db`, `src/lib` and the
-# Next.js app are deliberately absent: if the runtime ever grows an import into
-# them, this build fails rather than silently pulling a database driver and a web
-# framework into a container whose entire job is to run one agent.
+# Only what the in-sandbox runtime actually imports. The rest of `core/schema`,
+# the rest of `core/kernel`, `app/lib` and the Next.js app are deliberately
+# absent: if the runtime ever grows an import into them, this build fails rather
+# than silently pulling a database driver and a web framework into a container
+# whose entire job is to run one agent.
+#
+# Paths mirror the repository layout rather than being flattened, because the
+# runtime's own specifiers are relative — `../../app/activity/types.js`,
+# `../../core/kernel/config.js` — and only resolve if the tree shape survives.
 COPY runtime ./runtime
-COPY src/contracts ./src/contracts
-COPY src/activity ./src/activity
-COPY src/config.ts ./src/config.ts
+COPY app/contracts ./app/contracts
+COPY app/activity ./app/activity
+COPY core/kernel/config.ts ./core/kernel/config.ts
 # Type-only, and it is here for exactly that: the activity normalizers import
 # `ActivityKind` from the schema. `import type` is erased in the emit, so no
 # drizzle-orm reaches the shipped image — but the compiler still has to resolve it.
-COPY src/db/schema.ts ./src/db/schema.ts
+COPY core/schema/schema.ts ./core/schema/schema.ts
 
 # NodeNext resolution, so `./adapters/index.js` in the source resolves to
 # `adapters/index.ts` at compile time and stays `./adapters/index.js` in the emit —
@@ -61,7 +66,7 @@ RUN cat > tsconfig.sandbox.json <<'EOF'
     "sourceMap": true,
     "declaration": false
   },
-  "include": ["runtime/**/*.ts", "src/**/*.ts"],
+  "include": ["runtime/**/*.ts", "app/**/*.ts", "core/**/*.ts"],
   "exclude": ["**/*.test.ts"]
 }
 EOF
@@ -71,7 +76,7 @@ EOF
 # with no node_modules, where loading it throws. Deleting it makes "no database
 # driver in the sandbox" true of the filesystem and not just of the call graph.
 RUN npx tsc -p tsconfig.sandbox.json \
-	&& rm -rf dist/src/db \
+	&& rm -rf dist/core/schema \
 	&& printf '{"type":"module"}\n' > dist/package.json
 
 # ---------------------------------------------------------------------------

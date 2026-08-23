@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * Every branch the in-sandbox runtime takes, as a function of its inputs alone.
  *
@@ -27,8 +28,8 @@
  *    the previous one did, which is exactly the "setup.sh ran twice" bug.
  */
 
-import type { SettingKey } from "../src/config.js";
-import type { BootMode } from "../src/contracts/index.js";
+import type { SettingKey } from "../core/kernel/config.js";
+import type { BootMode } from "../app/contracts/index.js";
 
 /**
  * Turn a missed union member into a compile error.

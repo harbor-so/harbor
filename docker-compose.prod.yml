@@ -14,7 +14,7 @@
 # It is the address a SANDBOX uses to call Harbor back, not the address you type
 # into a browser, and with the `docker` provider those are different values.
 #
-# `src/sandbox/providers/docker.ts` builds its `docker run` with no `--network`
+# `app/sandbox/providers/docker.ts` builds its `docker run` with no `--network`
 # and no `--add-host`, so sandbox containers are created by the HOST daemon on the
 # default bridge. They are not on this compose network and cannot resolve the
 # service name `app`. What works:

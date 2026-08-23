@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * The boot decisions, tested at their exact boundaries and with nothing mocked.
  *
@@ -14,7 +15,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { BOOT_MODES } from "../src/contracts/index.js";
+import { BOOT_MODES } from "../app/contracts/index.js";
 import {
 	TUNNEL_ENV_PATH,
 	TUNNEL_SANDBOX_ID_KEY,

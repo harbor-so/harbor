@@ -199,7 +199,7 @@ wide enough that it must be stated rather than implied.
 | Unrecorded | `e2b`, `runloop` | Both vendors advertise microVM isolation, and Harbor's integration neither states nor verifies it. | Treat it as the vendor's claim until somebody confirms it. |
 
 Each tier comes from what the provider module itself documents
-(`src/sandbox/providers/*.ts`), because that is the only claim this repository can
+(`app/sandbox/providers/*.ts`), because that is the only claim this repository can
 be held to. **Do not infer a tier from the vendor's marketing.** An earlier version
 of this table put `modal` and `daytona` in the VM row and `codesandbox` in the
 container row; `modal.ts` says "a real, gVisor-isolated container", `daytona.ts`
@@ -208,7 +208,7 @@ micro-VM sandbox". All three were backwards, in the document a reviewer reads to
 decide whether the boundary is good enough.
 
 The authoritative list is `SANDBOX_PROVIDER_NAMES` in
-`src/sandbox/registry.ts` — a second list in prose is a list that rots, and this
+`app/sandbox/registry.ts` — a second list in prose is a list that rots, and this
 table said "`local` and `docker` are the ONLY shipped providers" for three
 releases after that stopped being true.
 
@@ -217,12 +217,12 @@ virtualisation boundary buys it by running your source on somebody else's
 hardware, which is the opposite of the trade a self-hosted deployment is usually
 making. **A VM boundary inside your own infrastructure does not exist yet.** If
 that is the requirement, the honest answer today is `docker` on a dedicated host,
-and the contract suite in `src/sandbox/providers/provider-contract.test.ts` is
+and the contract suite in `app/sandbox/providers/provider-contract.test.ts` is
 what would prove a contributed Kubernetes or Firecracker backend correct.
 
 **Choosing a remote provider moves your secrets across a vendor boundary.** This
 is the sentence this document most needed and did not contain. `buildSandboxEnv`
-(`src/sandbox/env.ts`) resolves repository secrets and injects them **decrypted**
+(`app/sandbox/env.ts`) resolves repository secrets and injects them **decrypted**
 into the box's environment, because that is the only way an agent can use them.
 On `docker` those plaintext values never leave your host. On any remote provider
 they are transmitted to, and held in memory by, a third party — and Harbor cannot
@@ -271,7 +271,7 @@ Both files ship with that mount commented out, deliberately. If you uncomment it
 
 On Kubernetes specifically: do not mount the node's socket into the Harbor pod.
 A first-class Kubernetes Job provider does not exist yet, and the provider
-contract suite (`src/sandbox/providers/provider-contract.test.ts`) is what would
+contract suite (`app/sandbox/providers/provider-contract.test.ts`) is what would
 prove one correct.
 
 ---

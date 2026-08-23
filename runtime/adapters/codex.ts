@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * OpenAI Codex CLI, driven headless.
  *
@@ -20,14 +21,14 @@
  * of bug, because everything except the observability worked.
  */
 
-import { summarizeTool } from "../../src/activity/types.js";
+import { summarizeTool } from "../../app/activity/types.js";
 import type {
 	AgentAdapter,
 	AgentInterrupt,
 	AgentStreamEvent,
 	AgentTurnRequest,
 	AgentUsage,
-} from "../../src/contracts/agent.js";
+} from "../../app/contracts/agent.js";
 import {
 	baseEnv,
 	firstString,

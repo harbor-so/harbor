@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-FSL-1.1-Apache-2.0
 /**
  * A signed-chat demo you can watch happen.
  *
@@ -13,11 +14,11 @@
  *   DATABASE_URL=... npm run demo:chat   # in another
  */
 
-import { db, sql } from "../src/db/index.js";
-import { apiKeys, orgs } from "../src/db/schema.js";
-import { ChatClient } from "../src/lib/chat-client.js";
-import { generateKeypair } from "../src/lib/signing.js";
-import { hashApiKey, mintApiKey } from "../src/lib/keys.js";
+import { db, sql } from "@core/schema/index.js";
+import { apiKeys, orgs } from "@core/schema/schema.js";
+import { ChatClient } from "@app/lib/chat-client.js";
+import { generateKeypair } from "@app/lib/signing.js";
+import { hashApiKey, mintApiKey } from "@core/kernel/keys.js";
 
 const BASE = process.env.HARBOR_URL ?? "http://localhost:3000";
 

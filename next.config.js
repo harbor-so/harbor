@@ -3,7 +3,7 @@ const config = {
 	// Packages that must be `require`d at runtime rather than bundled by webpack.
 	//
 	// `postgres` opens real sockets. The two vendor SDKs are here for a sharper
-	// reason: `src/sandbox/registry.ts` imports every provider eagerly — that is what
+	// reason: `app/sandbox/registry.ts` imports every provider eagerly — that is what
 	// makes a missing `switch` case a compile error — so both SDKs are reachable from
 	// the Next.js server graph even on a deployment that will never use them. Each
 	// resolves modules by computed expression (`modal` → `@grpc/grpc-js` and

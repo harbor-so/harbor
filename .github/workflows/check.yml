@@ -35,7 +35,7 @@ jobs:
           POSTGRES_PASSWORD: harbor
           POSTGRES_DB: harbor
         # Published on 5433, not 5432, and that is what makes this job
-        # zero-configuration: `src/db/index.ts` and `vitest.config.ts` both
+        # zero-configuration: `core/schema/index.ts` and `vitest.config.ts` both
         # default to postgres://harbor:harbor@localhost:5433/harbor, so no
         # DATABASE_URL needs to be set anywhere in this file.
         ports:
@@ -56,13 +56,41 @@ jobs:
 
       - run: npm ci
 
+      # The five structural checks, run before the database is touched because they
+      # need no database and finish in under a second — a licence header or a zone
+      # boundary that is wrong should come back in ten seconds, not after the suite.
+      #
+      # This is the same `npm run check:structure` that `npm run check` runs below,
+      # named as its own step only so the red X in the Actions UI says WHICH property
+      # broke. It is not a second source of truth: the list of checks lives in
+      # package.json, so local and CI cannot drift apart. The five, and the failure
+      # each one prevents:
+      #
+      #   check:spdx          a file that does not say which of the two licences it
+      #                       carries, so core/ cannot be extracted with confidence
+      #   check:boundaries    an import out of core/, or from app/ into pilot/, which
+      #                       nothing else in the build notices
+      #   check:license-leak  FSL text under core/, contradicting the Apache grant
+      #   check:write-path    a claims write outside core/kernel/, leaving the table
+      #                       right and every projection derived from it wrong
+      #   check:migrations    a destructive migration, run unattended against a
+      #                       self-hoster's database on boot
+      #
+      # They are blocking on purpose. These run against agent fleets where no human
+      # reads the diff, so a warning is a thing nobody sees.
+      - name: Structure (licences, boundaries, write path, migrations)
+        run: npm run check:structure
+
       # Mandatory and easy to miss: `vitest.setup.ts` takes the advisory lock and
       # truncates between cases, but nothing in the suite applies migrations.
       # Without this step every database-backed test fails on a missing table.
       - name: Apply migrations
         run: npm run db:migrate
 
-      # lint:config (no hardcoded tunables) + tsc + the full suite.
+      # lint:config (no hardcoded tunables) + the five structural checks + tsc + the
+      # full suite. `npm run check` is the documented gate and it is what runs here,
+      # so the command a contributor runs locally is the command that decides the
+      # pull request.
       - name: Check
         run: npm run check
 

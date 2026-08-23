@@ -2,11 +2,11 @@
 
 A provider is the only part of Harbor that touches a compute backend. Everything
 above it — spawn admission, fencing, reconciliation, the circuit breaker, cost
-accounting — is written once against `src/sandbox/provider.ts` and does not know
+accounting — is written once against `app/sandbox/provider.ts` and does not know
 whether a box is a container on a laptop or a machine in someone's VPC.
 
 This document is the prose half. **The executable half is
-`src/sandbox/providers/provider-contract.test.ts`, and it is the half that
+`app/sandbox/providers/provider-contract.test.ts`, and it is the half that
 counts.** A checklist gets skimmed; a suite that fails the build does not.
 
 ---
@@ -144,21 +144,22 @@ are checked before authorization ones.
 
 ## 5. No constants. Ever.
 
-Every timeout, threshold and limit comes from `setting()` in `src/config.ts`, and
-`scripts/lint-config.mjs` fails the build on a module-level one. If your provider
-needs a number that has no setting, either derive it from an existing one and
-**write the derivation down in a comment** (see `probeTimeoutMs` in the docker
-provider: a probe budget of one heartbeat interval, because an answer that arrives
-later cannot inform a decision that is still current), or propose a new entry in
-the `SETTINGS` registry. Do not invent a local constant; the self-hoster whose
-environment needs a different number cannot change it without forking.
+Every timeout, threshold and limit comes from `setting()` in
+`core/kernel/config.ts`, and `scripts/lint-config.mjs` fails the build on a
+module-level one. If your provider needs a number that has no setting, either
+derive it from an existing one and **write the derivation down in a comment**
+(see `probeTimeoutMs` in the docker provider: a probe budget of one heartbeat
+interval, because an answer that arrives later cannot inform a decision that is
+still current), or propose a new entry in the `SETTINGS` registry. Do not invent
+a local constant; the self-hoster whose environment needs a different number
+cannot change it without forking.
 
 ---
 
 ## 6. Run the contract suite
 
 ```ts
-// in src/sandbox/providers/provider-contract.test.ts
+// in app/sandbox/providers/provider-contract.test.ts
 describeProviderContract({
   label: "yourprovider",
   provider: yourProvider(),
@@ -187,7 +188,7 @@ than one that fails, because it is trusted.
 
 ## 7. Register it
 
-`src/sandbox/registry.ts`: add the name to `SANDBOX_PROVIDER_NAMES` and the case
+`app/sandbox/registry.ts`: add the name to `SANDBOX_PROVIDER_NAMES` and the case
 to the switch. The switch has no `default`, so omitting the case is a compile
 error.
 
